@@ -39,7 +39,9 @@ export default function CreateJobPage() {
     }
     const { error } = await supabase.from("jobs").insert([form]);
     if (error) {
-      console.error(error);
+      console.error("message:", error.message);
+      console.error("details:", error.details);
+      console.error("code:", error.code);
       return;
     }
     router.push("/admin/jobs");

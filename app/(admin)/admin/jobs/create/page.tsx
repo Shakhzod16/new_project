@@ -28,8 +28,8 @@ export default function CreateJobPage() {
     requirements: "",
   });
 
-  const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | null) => {
+    setForm((prev) => ({ ...prev, [field]: value ?? "" }));
   };
 
   const handleSave = async () => {
@@ -73,7 +73,10 @@ export default function CreateJobPage() {
             value={form.salary}
             onChange={(e) => handleChange("salary", e.target.value)}
           />
-          <Select value={form.type} onValueChange={(val) => handleChange("type", val)}>
+          <Select
+            value={form.type ?? ""}
+            onValueChange={(val) => handleChange("type", val)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Job Type *" />
             </SelectTrigger>

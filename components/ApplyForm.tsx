@@ -32,7 +32,12 @@ function ApplyForm({ jobId }: Props) {
     }
     setLoading(true);
     const { error } = await supabase.from("applications").insert([
-      { ...form, job_id: jobId },
+      {
+        ...form,
+        job_id: jobId,
+        status: "pending",
+        resume_url: null,
+      },
     ]);
     setLoading(false);
     if (error) {

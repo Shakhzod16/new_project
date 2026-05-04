@@ -20,7 +20,7 @@ function Navbar() {
         </Link>
         <Link
           href="/jobs"
-          className="font-medium text-gray-600 hover:text-gray-900"
+          className="font-medium text-gray-700 transition-colors hover:text-blue-900"
         >
           Jobs
         </Link>

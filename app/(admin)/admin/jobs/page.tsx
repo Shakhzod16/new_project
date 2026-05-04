@@ -11,9 +11,9 @@ export default async function JobsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
-      <main className="flex-1 bg-gray-50 p-8">
+      <main className="ml-60 flex-1 p-10">
         <h1 className="mb-6 text-2xl font-bold">Jobs</h1>
         <div className="grid grid-cols-1 gap-4">
           {(jobs as Job[])?.map((job) => (

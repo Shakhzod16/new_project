@@ -81,7 +81,17 @@ const JobDetailPage = async ({ params }: Props) => {
               <h2 className="mb-3 text-lg font-bold text-gray-900">
                 Requirements
               </h2>
-              <p className="leading-relaxed text-gray-600">{job.requirements}</p>
+              {Array.isArray(job.requirements) ? (
+                <ul className="list-inside list-disc leading-relaxed text-gray-600">
+                  {job.requirements.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="leading-relaxed text-gray-600">
+                  {job.requirements}
+                </p>
+              )}
             </div>
           ) : null}
         </div>

@@ -7,7 +7,8 @@ export type Job = {
   salary: string | null;
   type: string;
   description: string;
-  requirements: string | null;
+  requirements: string | string[] | null;
+  category?: string | null;
   is_active: boolean;
 };
 

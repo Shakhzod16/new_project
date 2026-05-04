@@ -34,8 +34,8 @@ export default function WhyChooseUs() {
             Why Choose JobPortal?
           </h2>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-gray-500">
-            We've designed the most intuitive job search platform to help you
-            find opportunities that align with your career goals.
+            We&apos;ve designed the most intuitive job search platform to help
+            you find opportunities that align with your career goals.
           </p>
         </div>
 

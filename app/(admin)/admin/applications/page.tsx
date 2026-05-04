@@ -4,12 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
 
+type JobRef = { title: string; company: string };
+
 type ApplicationRow = {
   id: string;
   full_name: string;
   email: string;
   created_at: string;
-  job: { title: string; company: string } | null;
+  job: JobRef | JobRef[] | null;
+};
+
+const getJob = (job: ApplicationRow["job"]): JobRef | null => {
+  if (!job) return null;
+  return Array.isArray(job) ? (job[0] ?? null) : job;
 };
 
 export default function ApplicationsPage() {
@@ -34,20 +41,27 @@ export default function ApplicationsPage() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setApplications(data as ApplicationRow[]);
+      setApplications(data as unknown as ApplicationRow[]);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    void fetchApplications();
+    let cancelled = false;
+    (async () => {
+      await fetchApplications();
+      if (cancelled) return;
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [fetchApplications]);
 
   const handleDelete = async (id: string) => {
     const confirmed = confirm("Delete this application?");
     if (!confirmed) return;
     await supabase.from("applications").delete().eq("id", id);
-    void fetchApplications();
+    await fetchApplications();
   };
 
   const formatDate = (dateStr: string) => {
@@ -108,7 +122,9 @@ export default function ApplicationsPage() {
                   </td>
                 </tr>
               ) : (
-                applications.map((app) => (
+                applications.map((app) => {
+                  const job = getJob(app.job);
+                  return (
                   <tr
                     key={app.id}
                     className="border-b border-gray-50 transition-colors hover:bg-gray-50"
@@ -118,7 +134,7 @@ export default function ApplicationsPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-500">{app.email}</td>
                     <td className="px-6 py-4 text-gray-600">
-                      {app.job?.title} - {app.job?.company}
+                      {job ? `${job.title} - ${job.company}` : "—"}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {formatDate(app.created_at)}
@@ -140,7 +156,8 @@ export default function ApplicationsPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

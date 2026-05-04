@@ -1,40 +1,16 @@
-import { createClient } from "@/utils/supabase/server";
-import type { Job } from "@/app/types";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import WhyChooseUs from "@/components/WhyChooseUs";
-import JobsList from "@/components/JobsList";
 import StatsSection from "@/components/StatsSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
-interface Props {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}
-
-const Home = async ({ searchParams }: Props) => {
-  const supabase = await createClient();
-  const params = await searchParams;
-
-  let query = supabase
-    .from("jobs")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
-
-  if (params.search) {
-    const term = params.search.trim();
-    query = query.or(`title.ilike.%${term}%,company.ilike.%${term}%`);
-  }
-
-  const { data: jobs } = await query;
-
+const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <HeroSection />
       <WhyChooseUs />
-      <JobsList jobs={(jobs ?? []) as Job[]} />
       <StatsSection />
       <CTASection />
       <Footer />

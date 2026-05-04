@@ -1,18 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, MapPin, Briefcase, DollarSign, Building2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import ApplyModal from "@/components/ApplyModal";
-import { getJobById } from "../sample-data";
+import { getJobById, type SampleJob } from "../sample-data";
 
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [job, setJob] = useState<SampleJob | null | undefined>(undefined);
 
-  const job = getJobById(params.id);
+  useEffect(() => {
+    setJob(getJobById(params.id) ?? null);
+  }, [params.id]);
+
+  if (job === undefined) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="mx-auto max-w-3xl px-4 py-20 text-center text-gray-400">
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   if (!job) {
     return (

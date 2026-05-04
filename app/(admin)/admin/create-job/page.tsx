@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { supabase } from "@/lib/supabase";
+import { addJob, JOB_TYPES } from "@/app/jobs/sample-data";
 
 const CATEGORIES = [
   "Technology",
@@ -11,13 +11,6 @@ const CATEGORIES = [
   "Marketing",
   "Finance",
   "Healthcare",
-];
-const JOB_TYPES = [
-  "Full-time",
-  "Part-time",
-  "Remote",
-  "Contract",
-  "Internship",
 ];
 
 type FormState = {
@@ -62,7 +55,7 @@ export default function CreateJobPage() {
     setError("");
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!form.title || !form.company || !form.location || !form.description) {
       setError("Please fill in all required fields.");
       return;
@@ -76,26 +69,22 @@ export default function CreateJobPage() {
       .map((r) => r.trim())
       .filter(Boolean);
 
-    const { error: dbError } = await supabase.from("jobs").insert([
-      {
+    try {
+      addJob({
         title: form.title,
         company: form.company,
         location: form.location,
-        salary: form.salary || null,
+        salary: form.salary || "",
         category: form.category,
         type: form.type,
         description: form.description,
-        requirements: reqArray.length ? reqArray : null,
-        is_active: true,
-      },
-    ]);
-
-    setLoading(false);
-
-    if (dbError) {
-      setError("Failed to create job. Try again.");
-    } else {
+        requirements: reqArray,
+      });
       router.push("/admin/jobs");
+    } catch (err) {
+      console.error("Failed to create job", err);
+      setError("Failed to create job. Try again.");
+      setLoading(false);
     }
   };
 
@@ -249,7 +238,7 @@ export default function CreateJobPage() {
           <div className="grid grid-cols-2 gap-4">
             <button
               type="button"
-              onClick={() => void handleSubmit()}
+              onClick={handleSubmit}
               disabled={loading}
               className="rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: "#1e3a6e" }}

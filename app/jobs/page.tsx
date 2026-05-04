@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { SAMPLE_JOBS, CATEGORIES, type SampleJob } from "./sample-data";
+import { CATEGORIES, getJobs, type SampleJob } from "./sample-data";
 
 export default function JobsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All Categories");
+  const [jobs, setJobs] = useState<SampleJob[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-  const filtered = SAMPLE_JOBS.filter((job) => {
+  useEffect(() => {
+    setJobs(getJobs());
+    setHydrated(true);
+  }, []);
+
+  const filtered = jobs.filter((job) => {
     const matchSearch =
       job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.company.toLowerCase().includes(search.toLowerCase());
@@ -89,7 +96,11 @@ export default function JobsPage() {
             </div>
 
             <div className="space-y-4">
-              {filtered.length === 0 ? (
+              {!hydrated ? (
+                <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-400">
+                  Loading jobs...
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-400">
                   No jobs found. Try different filters.
                 </div>

@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { addApplication } from "@/lib/applications-storage";
 
 interface Props {
+  jobId: string;
   jobTitle: string;
+  company: string;
   onClose: () => void;
 }
 
-export default function ApplyModal({ jobTitle, onClose }: Props) {
+export default function ApplyModal({
+  jobId,
+  jobTitle,
+  company,
+  onClose,
+}: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -30,9 +39,23 @@ export default function ApplyModal({ jobTitle, onClose }: Props) {
       alert("Iltimos, barcha maydonlarni to'ldiring");
       return;
     }
-    console.log("Application submitted:", { name, email, jobTitle });
-    alert("Ariza muvaffaqiyatli yuborildi!");
-    onClose();
+
+    setSubmitting(true);
+    try {
+      addApplication({
+        jobId,
+        jobTitle,
+        company,
+        applicantName: name.trim(),
+        applicantEmail: email.trim(),
+      });
+      alert("Arizangiz muvaffaqiyatli yuborildi!");
+      onClose();
+    } catch (err) {
+      console.error("Failed to save application", err);
+      alert("Arizani saqlashda xatolik yuz berdi. Qayta urinib ko'ring.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -67,7 +90,8 @@ export default function ApplyModal({ jobTitle, onClose }: Props) {
         </div>
 
         <p className="mb-6 text-sm text-gray-500">
-          Apply to: <strong className="text-gray-900">{jobTitle}</strong>
+          Apply to: <strong className="text-gray-900">{jobTitle}</strong>{" "}
+          <span className="text-gray-400">at {company}</span>
         </p>
 
         <div className="mb-4">
@@ -107,10 +131,11 @@ export default function ApplyModal({ jobTitle, onClose }: Props) {
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full rounded-lg py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          disabled={submitting}
+          className="w-full rounded-lg py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           style={{ backgroundColor: "#1e3a6e" }}
         >
-          Submit Application
+          {submitting ? "Submitting..." : "Submit Application"}
         </button>
       </div>
     </>

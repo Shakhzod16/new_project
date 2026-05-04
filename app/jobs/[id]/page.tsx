@@ -158,7 +158,9 @@ export default function JobDetailPage() {
 
       {isModalOpen ? (
         <ApplyModal
+          jobId={job.id}
           jobTitle={job.title}
+          company={job.company}
           onClose={() => setIsModalOpen(false)}
         />
       ) : null}

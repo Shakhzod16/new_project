@@ -1,77 +1,58 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { supabase } from "@/lib/supabase";
+import {
+  type ApplicationStatus,
+  type LocalApplication,
+  deleteApplication,
+  getApplications,
+  updateApplicationStatus,
+} from "@/lib/applications-storage";
 
-type JobRef = { title: string; company: string };
+const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
+  { value: "pending", label: "Kutilmoqda" },
+  { value: "reviewed", label: "Ko'rildi" },
+  { value: "accepted", label: "Qabul qilindi" },
+  { value: "rejected", label: "Rad etildi" },
+];
 
-type ApplicationRow = {
-  id: string;
-  full_name: string;
-  email: string;
-  created_at: string;
-  job: JobRef | JobRef[] | null;
-};
-
-const getJob = (job: ApplicationRow["job"]): JobRef | null => {
-  if (!job) return null;
-  return Array.isArray(job) ? (job[0] ?? null) : job;
+const STATUS_STYLES: Record<
+  ApplicationStatus,
+  { background: string; color: string }
+> = {
+  pending: { background: "#fef3c7", color: "#92400e" },
+  reviewed: { background: "#dbeafe", color: "#1e40af" },
+  accepted: { background: "#d1fae5", color: "#065f46" },
+  rejected: { background: "#fee2e2", color: "#991b1b" },
 };
 
 export default function ApplicationsPage() {
-  const [applications, setApplications] = useState<ApplicationRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchApplications = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("applications")
-      .select(
-        `
-        id,
-        full_name,
-        email,
-        created_at,
-        job:jobs (
-          title,
-          company
-        )
-      `,
-      )
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setApplications(data as unknown as ApplicationRow[]);
-    }
-    setLoading(false);
-  }, []);
+  const [applications, setApplications] = useState<LocalApplication[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      await fetchApplications();
-      if (cancelled) return;
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchApplications]);
+    setApplications(getApplications());
+    setHydrated(true);
+  }, []);
 
-  const handleDelete = async (id: string) => {
-    const confirmed = confirm("Delete this application?");
-    if (!confirmed) return;
-    await supabase.from("applications").delete().eq("id", id);
-    await fetchApplications();
+  const handleStatusChange = (id: number, status: ApplicationStatus) => {
+    setApplications(updateApplicationStatus(id, status));
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString("en-US", {
+  const handleDelete = (id: number) => {
+    const confirmed = confirm("Bu arizani o'chirishni xohlaysizmi?");
+    if (!confirmed) return;
+    setApplications(deleteApplication(id));
+  };
+
+  const formatDate = (iso: string) => {
+    return new Date(iso).toLocaleString("uz-UZ", {
+      year: "numeric",
       month: "short",
       day: "numeric",
-      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
     });
   };
 
@@ -87,81 +68,93 @@ export default function ApplicationsPage() {
           Review and manage all job applications ({applications.length} total)
         </p>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-6 py-4 text-left font-bold text-gray-900">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left font-bold text-gray-900">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left font-bold text-gray-900">
-                  Job
-                </th>
-                <th className="px-6 py-4 text-left font-bold text-gray-900">
-                  Applied Date
-                </th>
-                <th className="px-6 py-4 text-right font-bold text-gray-900">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-10 text-center text-gray-400">
-                    Loading...
-                  </td>
+        {!hydrated ? (
+          <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center text-gray-400">
+            Loading...
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
+            <p className="text-gray-400">Hozircha ariza yo&apos;q.</p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Ariza beruvchi
+                  </th>
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Email
+                  </th>
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Lavozim
+                  </th>
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Kompaniya
+                  </th>
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Sana
+                  </th>
+                  <th className="px-6 py-4 text-left font-bold text-gray-900">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-right font-bold text-gray-900">
+                    Amallar
+                  </th>
                 </tr>
-              ) : applications.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-10 text-center text-gray-400">
-                    No applications yet.
-                  </td>
-                </tr>
-              ) : (
-                applications.map((app) => {
-                  const job = getJob(app.job);
-                  return (
+              </thead>
+              <tbody>
+                {applications.map((app) => (
                   <tr
                     key={app.id}
                     className="border-b border-gray-50 transition-colors hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {app.full_name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-500">{app.email}</td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {job ? `${job.title} - ${job.company}` : "—"}
+                      {app.applicantName}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
-                      {formatDate(app.created_at)}
+                      {app.applicantEmail}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">{app.jobTitle}</td>
+                    <td className="px-6 py-4 text-gray-600">{app.company}</td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {formatDate(app.appliedAt)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={app.status}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            app.id,
+                            e.target.value as ApplicationStatus,
+                          )
+                        }
+                        style={STATUS_STYLES[app.status]}
+                        className="cursor-pointer rounded-full border-none px-3 py-1 text-xs font-semibold outline-none"
+                      >
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         type="button"
-                        onClick={() => alert(`Viewing: ${app.full_name}`)}
-                        className="mr-4 font-medium text-gray-700 transition-colors hover:text-black"
+                        onClick={() => handleDelete(app.id)}
+                        className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
                       >
-                        View
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(app.id)}
-                        className="font-medium text-red-500 transition-colors hover:text-red-700"
-                      >
-                        Delete
+                        O&apos;chirish
                       </button>
                     </td>
                   </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </main>
     </div>
   );

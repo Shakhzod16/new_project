@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { setAdminLoggedIn } from "@/lib/useIsAdmin";
 
 const ADMIN_EMAIL = "admin@jobportal.com";
 const ADMIN_PASSWORD = "admin123";
@@ -14,9 +15,18 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.localStorage.getItem("isAdmin") === "true"
+    ) {
+      router.replace("/admin/jobs");
+    }
+  }, [router]);
+
   const handleLogin = () => {
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      localStorage.setItem("isAdmin", "true");
+      setAdminLoggedIn(true);
       router.push("/admin/jobs");
     } else {
       setError("Email yoki parol noto'g'ri");

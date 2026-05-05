@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 function Navbar() {
+  const { isAdmin, hydrated } = useIsAdmin();
+
   return (
     <nav className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-4">
       <div className="flex items-center gap-2">
@@ -24,11 +29,13 @@ function Navbar() {
         >
           Jobs
         </Link>
-        <Link href="/admin">
-          <Button className="bg-blue-900 px-5 text-white hover:bg-blue-800">
-            Post a Job
-          </Button>
-        </Link>
+        {hydrated && isAdmin ? (
+          <Link href="/admin/create-job">
+            <Button className="bg-blue-900 px-5 text-white hover:bg-blue-800">
+              Post a Job
+            </Button>
+          </Link>
+        ) : null}
       </div>
     </nav>
   );

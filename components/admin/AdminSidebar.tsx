@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { setAdminLoggedIn } from "@/lib/useIsAdmin";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -10,8 +11,8 @@ export default function AdminSidebar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("isAdmin");
-    router.push("/");
+    setAdminLoggedIn(false);
+    router.push("/admin");
   };
 
   const links = [

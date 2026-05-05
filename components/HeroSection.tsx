@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 function HeroSection() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const { isAdmin, hydrated } = useIsAdmin();
 
   const handleSearch = () => {
     const q = search.trim();
@@ -54,11 +56,13 @@ function HeroSection() {
             Browse All Jobs
           </Button>
         </Link>
-        <Link href="/admin">
-          <Button variant="outline" className="h-12 px-8">
-            Post a Job
-          </Button>
-        </Link>
+        {hydrated && isAdmin ? (
+          <Link href="/admin/create-job">
+            <Button variant="outline" className="h-12 px-8">
+              Post a Job
+            </Button>
+          </Link>
+        ) : null}
       </div>
 
       <div className="flex items-center justify-center gap-16">

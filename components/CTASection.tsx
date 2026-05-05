@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 export default function CTASection() {
   const router = useRouter();
+  const { isAdmin, hydrated } = useIsAdmin();
 
   return (
     <section
@@ -28,13 +30,15 @@ export default function CTASection() {
           >
             Explore Jobs
           </button>
-          <button
-            type="button"
-            onClick={() => router.push("/post-job")}
-            className="rounded border border-white px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white hover:text-blue-900"
-          >
-            Post a Job
-          </button>
+          {hydrated && isAdmin ? (
+            <button
+              type="button"
+              onClick={() => router.push("/admin/create-job")}
+              className="rounded border border-white px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white hover:text-blue-900"
+            >
+              Post a Job
+            </button>
+          ) : null}
         </div>
       </div>
     </section>
